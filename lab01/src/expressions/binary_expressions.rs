@@ -1,9 +1,8 @@
-use std::fmt::Debug;
-use expr_eq_derive::ExprEq;
+use super::{AnyEq, AsAny, Expression};
+use any_eq_derive::AnyEq;
+use std::{any::Any, fmt::Debug};
 
-use super::{Expression, AsAny, ExpEq};
-
-#[derive(Debug, ExprEq)]
+#[derive(Debug)]
 pub enum BinExpr {
     IfExpr {
         cond: Box<dyn Expression>,
@@ -29,9 +28,9 @@ impl PartialEq for BinExpr {
                     iffalse: r_iffalse,
                 },
             ) => {
-                l_cond.exp_eq(&**r_cond)
-                    && l_iftrue.exp_eq(&**r_iftrue)
-                    && l_iffalse.exp_eq(&**r_iffalse)
+                l_cond.any_eq(r_cond.as_any())
+                    && l_iftrue.any_eq(r_iftrue.as_any())
+                    && l_iffalse.any_eq(r_iffalse.as_any())
             }
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
@@ -40,7 +39,7 @@ impl PartialEq for BinExpr {
 
 impl Eq for BinExpr {}
 
-impl Expression for BinExpr { 
+impl Expression for BinExpr {
     fn evaluate(self) -> Box<dyn Expression> {
         todo!()
     }

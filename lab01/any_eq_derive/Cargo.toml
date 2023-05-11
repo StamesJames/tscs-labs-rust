@@ -1,5 +1,5 @@
 [package]
-name = "expr_eq_derive"
+name = "any_eq_derive"
 version = "0.1.0"
 edition = "2021"
 

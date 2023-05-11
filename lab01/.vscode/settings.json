@@ -1,6 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        ".\\expr_eq_derive\\Cargo.toml",
+        ".\\any_eq_derive\\Cargo.toml",
         ".\\Cargo.toml"
     ]
 }
