@@ -1,6 +1,6 @@
 use super::{AnyEq, AsAny, Expression};
-use any_eq_derive::AnyEq;
-use std::{any::Any, fmt::Debug};
+
+use std::{fmt::Debug};
 
 #[derive(Debug)]
 pub enum BinExpr {
