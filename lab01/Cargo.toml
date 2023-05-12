@@ -7,6 +7,4 @@ edition = "2021"
 
 [dependencies]
 nom = "7.1.3"
-pest = "2.6.0"
-pom = "3.2.0"
 any_eq_derive = {path = "./any_eq_derive"}

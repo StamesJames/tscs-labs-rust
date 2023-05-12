@@ -1,8 +1,10 @@
+use any_eq_derive::PartialEqAnyEq;
+
 use super::{AnyEq, AsAny, Expression};
 
 use std::{fmt::Debug};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEqAnyEq)]
 pub enum BinExpr {
     IfExpr {
         cond: Box<dyn Expression>,
