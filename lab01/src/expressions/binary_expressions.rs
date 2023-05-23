@@ -1,7 +1,6 @@
 extern crate any_eq_derive;
-use crate::bx;
 
-use super::{AnyEq, AsAny, AsExpression, Expression};
+use super::{AnyEq, AsAny, AsExpression, CloneDynExpression, Expression};
 use any_eq_derive::{AnyEq, AsAny, PartialEqAnyEq};
 use std::any::Any;
 use std::fmt::Debug;
@@ -27,10 +26,19 @@ impl Expression for BinExpr {
                 iftrue,
                 iffalse,
             } => {
-                if cond.evaluate() == Some(BinExpr::True.as_boxed_expr()) {
-                    iftrue.evaluate()
-                } else if cond.evaluate() == Some(BinExpr::False.as_boxed_expr()) {
-                    iffalse.evaluate()
+                if cond.progress_possible() {
+                    Some(
+                        BinExpr::IfExpr {
+                            cond: cond.evaluate().unwrap(),
+                            iftrue: iftrue.clone_dyn(),
+                            iffalse: iffalse.clone_dyn(),
+                        }
+                        .as_boxed_expr(),
+                    )
+                } else if cond == &BinExpr::True.as_boxed_expr() {
+                    Some(iftrue.clone_dyn())
+                } else if cond == &BinExpr::False.as_boxed_expr() {
+                    Some(iffalse.clone_dyn())
                 } else {
                     None
                 }
@@ -43,7 +51,31 @@ impl Expression for BinExpr {
     fn is_value(&self) -> bool {
         match self {
             Self::True | Self::False => true,
-            _ => false
+            _ => false,
+        }
+    }
+}
+
+impl CloneDynExpression for BinExpr {
+    fn clone_dyn(&self) -> Box<dyn Expression> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for BinExpr {
+    fn clone(&self) -> Self {
+        match self {
+            Self::IfExpr {
+                cond,
+                iftrue,
+                iffalse,
+            } => Self::IfExpr {
+                cond: cond.clone_dyn(),
+                iftrue: iftrue.clone_dyn(),
+                iffalse: iffalse.clone_dyn(),
+            },
+            Self::True => Self::True,
+            Self::False => Self::False,
         }
     }
 }
@@ -83,7 +115,14 @@ mod tests {
     #[test]
     fn if_if_true_then_false_else_true_then_false_else_true_eval_true() {
         assert_eq!(
-            Some(True.as_boxed_expr()),
+            Some(
+                IfExpr {
+                    cond: bx!(False),
+                    iftrue: bx!(False),
+                    iffalse: bx!(True)
+                }
+                .as_boxed_expr()
+            ),
             IfExpr {
                 cond: bx!(IfExpr {
                     cond: bx!(True),
@@ -94,7 +133,28 @@ mod tests {
                 iffalse: bx!(True)
             }
             .evaluate()
-        )
+        );
+        assert_eq!(
+            Some(True.as_boxed_expr()),
+            IfExpr {
+                cond: bx!(False),
+                iftrue: bx!(False),
+                iffalse: bx!(True)
+            }
+            .evaluate()
+        );
+        let true_expr = &(True.as_boxed_expr());
+        let if_expr = &(IfExpr {
+            cond: bx!(IfExpr {
+                cond: bx!(True),
+                iftrue: bx!(False),
+                iffalse: bx!(True)
+            }),
+            iftrue: bx!(False),
+            iffalse: bx!(True),
+        }
+        .evaluate_to_end());
+        assert_eq!(true_expr, if_expr)
     }
 
     #[test]

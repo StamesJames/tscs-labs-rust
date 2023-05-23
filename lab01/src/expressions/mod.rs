@@ -5,12 +5,13 @@ use any_eq::{AnyEq, AsAny};
 pub mod binary_expressions;
 pub mod numeric_expressions;
 
-pub trait Expression: AsAny + Debug + AnyEq + AsExpression {
+
+pub trait Expression: AsAny + Debug + AnyEq + AsExpression + CloneDynExpression{
     fn evaluate(&self) -> Option<Box<dyn Expression>>;
-    fn evaluate_to_end(&self) -> Option<Box<dyn Expression>> {
-        let mut ret =  self.evaluate();
-        while let Some(x) = ret {
-            ret = x.evaluate();
+    fn evaluate_to_end(&self) -> Box<dyn Expression> {
+        let mut ret =  self.clone_dyn();
+        while ret.progress_possible() {
+            ret = ret.evaluate().unwrap();
         }
         return ret;
     }
@@ -18,6 +19,10 @@ pub trait Expression: AsAny + Debug + AnyEq + AsExpression {
         self.evaluate().is_some()
     }
     fn is_value(&self) -> bool;
+}
+
+pub trait CloneDynExpression {
+    fn clone_dyn(&self) -> Box<dyn Expression>;
 }
 
 
@@ -41,13 +46,14 @@ impl PartialEq for dyn Expression {
 
 #[cfg(test)]
 mod tests {
-    use any_eq_derive::PartialEqAnyEq;
-
+    use any_eq_derive::{PartialEqAnyEq, AsAny, AnyEq};
+    use any_eq::{AnyEq, AsAny};
+    use std::any::Any;
     use crate::bx;
 
     #[test]
     fn any_eq_enum_without_dyn() {
-        #[derive(PartialEqAnyEq)]
+        #[derive(AsAny, AnyEq, PartialEqAnyEq)]
         enum TE {
             TE1(i32, String, Box<String>),
             TE2 { x: i32, y: String, z: Box<String> },
