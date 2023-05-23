@@ -8,7 +8,7 @@ use nom::{
     IResult,
 };
 
-use crate::expressions::binary_expressions::BinExpr;
+use crate::{bx, expressions::binary_expressions::BinExpr};
 
 pub struct BinExprParser;
 
@@ -21,8 +21,8 @@ where
 
 impl BinExprParser {
     pub fn parse(s: &str) -> IResult<&str, Box<BinExpr>> {
-        let true_tok = map(ws(tag("true")), |_| Box::new(BinExpr::True));
-        let false_tok = map(ws(tag("false")), |_| Box::new(BinExpr::False));
+        let true_tok = map(ws(tag("true")), |_| bx!(BinExpr::True));
+        let false_tok = map(ws(tag("false")), |_| bx!(BinExpr::False));
         let if_parse = map(
             |s| {
                 (
@@ -36,7 +36,7 @@ impl BinExprParser {
                     .parse(s)
             },
             |(_, cond, _, iftrue, _, iffalse)| {
-                Box::new(BinExpr::IfExpr {
+                bx!(BinExpr::IfExpr {
                     cond,
                     iftrue,
                     iffalse,
@@ -50,21 +50,18 @@ impl BinExprParser {
 
 #[cfg(test)]
 mod tests {
-    use crate::parsers::binary_expression::{BinExpr, BinExprParser};
+    use crate::{
+        bx,
+        parsers::binary_expression::{BinExpr, BinExprParser},
+    };
 
     #[test]
     fn succ_parse_true() {
-        assert_eq!(
-            BinExprParser::parse("true"),
-            Ok(("", Box::new(BinExpr::True)))
-        )
+        assert_eq!(BinExprParser::parse("true"), Ok(("", bx!(BinExpr::True))))
     }
     #[test]
     fn succ_parse_false() {
-        assert_eq!(
-            BinExprParser::parse("false"),
-            Ok(("", Box::new(BinExpr::False)))
-        )
+        assert_eq!(BinExprParser::parse("false"), Ok(("", bx!(BinExpr::False))))
     }
 
     #[test]
@@ -78,10 +75,10 @@ mod tests {
             BinExprParser::parse("if true then false else true"),
             Ok((
                 "",
-                Box::new(BinExpr::IfExpr {
-                    cond: Box::new(BinExpr::True),
-                    iftrue: Box::new(BinExpr::False),
-                    iffalse: Box::new(BinExpr::True),
+                bx!(BinExpr::IfExpr {
+                    cond: bx!(BinExpr::True),
+                    iftrue: bx!(BinExpr::False),
+                    iffalse: bx!(BinExpr::True),
                 })
             ))
         );
@@ -93,14 +90,14 @@ mod tests {
             BinExprParser::parse("if if true then false else true then false else true"),
             Ok((
                 "",
-                Box::new(BinExpr::IfExpr {
-                    cond: Box::new(BinExpr::IfExpr {
-                        cond: Box::new(BinExpr::True),
-                        iftrue: Box::new(BinExpr::False),
-                        iffalse: Box::new(BinExpr::True)
+                bx!(BinExpr::IfExpr {
+                    cond: bx!(BinExpr::IfExpr {
+                        cond: bx!(BinExpr::True),
+                        iftrue: bx!(BinExpr::False),
+                        iffalse: bx!(BinExpr::True)
                     }),
-                    iftrue: Box::new(BinExpr::False),
-                    iffalse: Box::new(BinExpr::True)
+                    iftrue: bx!(BinExpr::False),
+                    iffalse: bx!(BinExpr::True)
                 })
             ))
         )
