@@ -1,16 +1,19 @@
 use any_eq_derive::{ AnyEq, AsAny, PartialEqAnyEq };
+use clone_dyn::{dyn_clonable_for_traits, CloneDyn};
 
 use super::{
     binary_expressions::BinExpr,
     AnyEq,
     AsAny,
     AsExpression,
-    CloneDynExpression,
     Expression,
 };
 use std::any::Any;
+use super::ExpressionDynCloneAutoDerive;
 
-#[derive(Debug, AsAny, AnyEq, PartialEqAnyEq)]
+
+#[dyn_clonable_for_traits(Expression)]
+#[derive(Debug, AsAny, AnyEq, PartialEqAnyEq, CloneDyn)]
 pub enum NumExpr {
     Succ(Box<dyn Expression>),
     Pred(Box<dyn Expression>),
@@ -43,23 +46,6 @@ impl Expression for NumExpr {
                     .downcast_ref::<NumExpr>()
                     .map_or(false, |x| x.is_value()),
             _ => false,
-        }
-    }
-}
-
-impl CloneDynExpression for NumExpr {
-    fn clone_dyn(&self) -> Box<dyn Expression> {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for NumExpr {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Succ(arg0) => Self::Succ(arg0.clone_dyn()),
-            Self::Pred(arg0) => Self::Pred(arg0.clone_dyn()),
-            Self::IsZero(arg0) => Self::IsZero(arg0.clone_dyn()),
-            Self::Zero => Self::Zero,
         }
     }
 }

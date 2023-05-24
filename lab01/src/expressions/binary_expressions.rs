@@ -1,10 +1,13 @@
 extern crate any_eq_derive;
 
-use super::{AnyEq, AsAny, AsExpression, CloneDynExpression, Expression};
+use super::{AnyEq, AsAny, AsExpression, Expression};
 use any_eq_derive::{AnyEq, AsAny, PartialEqAnyEq};
+use clone_dyn::dyn_clonable_for_traits;
 use std::any::Any;
 use std::fmt::Debug;
+use super::ExpressionDynCloneAutoDerive;
 
+#[dyn_clonable_for_traits(Expression)]
 #[derive(Debug, AsAny, AnyEq, PartialEqAnyEq)]
 pub enum BinExpr {
     IfExpr {
@@ -53,12 +56,6 @@ impl Expression for BinExpr {
             Self::True | Self::False => true,
             _ => false,
         }
-    }
-}
-
-impl CloneDynExpression for BinExpr {
-    fn clone_dyn(&self) -> Box<dyn Expression> {
-        Box::new(self.clone())
     }
 }
 

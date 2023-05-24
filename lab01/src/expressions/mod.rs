@@ -1,12 +1,13 @@
 use std::fmt::Debug;
 
 use any_eq::{AnyEq, AsAny};
+use clone_dyn::dyn_clonable;
 
 pub mod binary_expressions;
 pub mod numeric_expressions;
 
-
-pub trait Expression: AsAny + Debug + AnyEq + AsExpression + CloneDynExpression{
+#[dyn_clonable]
+pub trait Expression: AsAny + Debug + AnyEq + AsExpression{
     fn evaluate(&self) -> Option<Box<dyn Expression>>;
     fn evaluate_to_end(&self) -> Box<dyn Expression> {
         let mut ret =  self.clone_dyn();
@@ -19,10 +20,6 @@ pub trait Expression: AsAny + Debug + AnyEq + AsExpression + CloneDynExpression{
         self.evaluate().is_some()
     }
     fn is_value(&self) -> bool;
-}
-
-pub trait CloneDynExpression {
-    fn clone_dyn(&self) -> Box<dyn Expression>;
 }
 
 
