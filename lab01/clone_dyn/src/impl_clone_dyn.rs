@@ -71,29 +71,26 @@ fn gen_clone_dyn_enum_variants(
             }
         }
     }
-    return quote! {
+    quote! {
         match self {
             #gen_match_arms
         }
-    };
+    }
 }
 
 fn make_clone_for_type(field_name: &Ident, field_type: &Type) -> quote::__private::TokenStream {
     match field_type {
         TraitObject(_) => quote!(#field_name.clone_dyn()),
-        Type::Reference(ty) => make_clone_for_type(field_name, &*ty.elem),
+        Type::Reference(ty) => make_clone_for_type(field_name, &ty.elem),
         Type::Path(TypePath {
             path: Path { segments, .. },
             ..
         }) => {
             if segments.iter().any(|segment| match &segment.arguments {
-                syn::PathArguments::AngleBracketed(args) => args.args.iter().any(|arg| match arg {
-                    syn::GenericArgument::Type(ty) => match ty {
-                        TraitObject(_) => true,
-                        _ => false,
-                    },
-                    _ => false,
-                }),
+                syn::PathArguments::AngleBracketed(args) => args
+                    .args
+                    .iter()
+                    .any(|arg| matches!(arg, syn::GenericArgument::Type(TraitObject(_)))),
                 _ => false,
             }) {
                 quote!(#field_name.clone_dyn())
@@ -116,7 +113,7 @@ fn make_named_fields(
         fields_named = quote! { #field_name, #fields_named };
 
         let cloned_field = make_clone_for_type(field_name, &field.ty);
-        fields_named_clones = quote!(#field_name : #cloned_field);
+        fields_named_clones = quote!(#field_name : #cloned_field, #fields_named_clones);
     }
     (fields_named, fields_named_clones)
 }
@@ -126,7 +123,7 @@ fn make_unnamed_fields(
 ) -> (quote::__private::TokenStream, quote::__private::TokenStream) {
     let mut fields_unnamed = quote!();
     let mut fields_unnamed_clones = quote!();
-    for (n, field) in (&fields.unnamed).iter().enumerate().rev() {
+    for (n, field) in fields.unnamed.iter().enumerate().rev() {
         let field_name = format_ident!("this_{}", n);
         fields_unnamed = quote! { #field_name, #fields_unnamed };
         let field_clone = make_clone_for_type(&field_name, &field.ty);

@@ -7,14 +7,14 @@ pub mod binary_expressions;
 pub mod numeric_expressions;
 
 #[dyn_clonable]
-pub trait Expression: AsAny + Debug + AnyEq + AsExpression{
+pub trait Expression: AsAny + Debug + AnyEq + AsExpression {
     fn evaluate(&self) -> Option<Box<dyn Expression>>;
     fn evaluate_to_end(&self) -> Box<dyn Expression> {
-        let mut ret =  self.clone_dyn();
+        let mut ret = self.clone_dyn();
         while ret.progress_possible() {
             ret = ret.evaluate().unwrap();
         }
-        return ret;
+        ret
     }
     fn progress_possible(&self) -> bool {
         self.evaluate().is_some()
@@ -22,16 +22,15 @@ pub trait Expression: AsAny + Debug + AnyEq + AsExpression{
     fn is_value(&self) -> bool;
 }
 
-
 pub trait AsExpression {
     fn as_expr(&self) -> &dyn Expression;
-    fn as_boxed_expr(self) -> Box<dyn Expression>;
+    fn boxed_expr(self) -> Box<dyn Expression>;
 }
 impl<T: Expression> AsExpression for T {
     fn as_expr(&self) -> &dyn Expression {
         self
     }
-    fn as_boxed_expr(self) -> Box<dyn Expression> {
+    fn boxed_expr(self) -> Box<dyn Expression> {
         Box::new(self)
     }
 }
@@ -43,10 +42,10 @@ impl PartialEq for dyn Expression {
 
 #[cfg(test)]
 mod tests {
-    use any_eq_derive::{PartialEqAnyEq, AsAny, AnyEq};
-    use any_eq::{AnyEq, AsAny};
-    use std::any::Any;
     use crate::bx;
+    use any_eq::{AnyEq, AsAny};
+    use any_eq_derive::{AnyEq, AsAny, PartialEqAnyEq};
+    use std::any::Any;
 
     #[test]
     fn any_eq_enum_without_dyn() {

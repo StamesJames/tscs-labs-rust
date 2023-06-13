@@ -2,6 +2,10 @@
 name = "any_eq"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["dynamic"]
+description = "Just the two traits AsAny and AnyEq with the  functions as_any and any_eq to compare arbitrary dyn Objects."
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
